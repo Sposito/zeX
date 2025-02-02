@@ -1,7 +1,6 @@
 const std = @import("std");
 const lib = @import("lib");
 
-// Função principal
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -9,14 +8,16 @@ pub fn main() !void {
     // Código Scheme de entrada
     const scheme_source = "(+ (+ 1 2) 3)";
 
+    // Tokeniza e parseia a entrada
     const tokens = try lib.tokenize(allocator, scheme_source);
     var index: usize = 0;
     const expr = try lib.parse(tokens, &index, allocator);
 
-    const zig_code = try lib.generateZig(allocator, expr);
+    // Transforma a AST em um tipo Zig para avaliação em tempo de compilação
+    const Computed = lib.generateZig(expr);
 
-    try lib.writeToFile("output.zig", zig_code);
-    try lib.compileGeneratedZig();
-
-    std.debug.print("Executável gerado: ./output\n", .{});
+    // Executa a expressão em `comptime`
+    comptime {
+        std.debug.print("Resultado: {}\n", .{Computed.eval()});
+    }
 }
